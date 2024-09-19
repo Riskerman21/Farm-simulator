@@ -233,6 +233,40 @@ public class FarmGridTest {
         assertEquals(expectedStats(itemsPlacedPlant), plantGrid.getStats());
     }
 
+    @Test
+    public void placeMultipleItemsPlantGridTest() {
+        plantGrid.place(0, 0, coffeeStage1);
+        plantGrid.place(1, 1, berryStage1);
+        plantGrid.place(2, 2, wheatStage1);
+
+        itemsPlacedPlant.put(convertToPosition(0, 0),
+                new ArrayList<>(Arrays.asList("coffee", Character.toString(coffeeStage1), "Stage: 1")));
+        itemsPlacedPlant.put(convertToPosition(1, 1),
+                new ArrayList<>(Arrays.asList("berry", Character.toString(berryStage1), "Stage: 1")));
+        itemsPlacedPlant.put(convertToPosition(2, 2),
+                new ArrayList<>(Arrays.asList("wheat", Character.toString(wheatStage1), "Stage: 1")));
+
+        assertEquals("Plant grid stats were incorrect after placing multiple items",
+                expectedStats(itemsPlacedPlant), plantGrid.getStats());
+    }
+
+    @Test
+    public void placeMultipleItemsAnimalGridTest() {
+        animalGrid.place(0, 0, chicken);
+        animalGrid.place(1, 1, cow);
+        animalGrid.place(2, 2, sheep);
+
+        itemsPlacedAnimal.put(convertToPosition(0, 0),
+                new ArrayList<>(Arrays.asList("chicken", Character.toString(chicken), "Fed: false", "Collected: false")));
+        itemsPlacedAnimal.put(convertToPosition(1, 1),
+                new ArrayList<>(Arrays.asList("cow", Character.toString(cow), "Fed: false", "Collected: false")));
+        itemsPlacedAnimal.put(convertToPosition(2, 2),
+                new ArrayList<>(Arrays.asList("sheep", Character.toString(sheep), "Fed: false", "Collected: false")));
+
+        assertEquals("Animal grid stats were incorrect after placing multiple items",
+                expectedStats(itemsPlacedAnimal), animalGrid.getStats());
+    }
+
     private void populatePlantGrownPlantGrid(Grid plantGrid) {
         populatePlantFarm(plantGrid);
         attemptInteraction(plantGrid, END_DAY, 0, 0);
