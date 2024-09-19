@@ -42,7 +42,7 @@ public class FarmGrid implements Grid {
         this.farmState = new ArrayList<>(rows * columns);
         this.randomQuality = new RandomQuality();
         for (int i = 0; i < rows * columns; i++) {
-            farmState.add(new GridItem("ground", " ", new HashMap<>()));
+            farmState.add(new GridItem("ground", " "));
         }
     }
 
@@ -220,7 +220,7 @@ public class FarmGrid implements Grid {
      */
     private void remove(int row, int column) {
         if (isValidPosition(row, column)) {
-            farmState.set(getIndex(row, column), new GridItem("ground", " ", new HashMap<>()));
+            farmState.set(getIndex(row, column), new GridItem("ground", " "));
         }
     }
 
