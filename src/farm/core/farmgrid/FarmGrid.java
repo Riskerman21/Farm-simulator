@@ -93,14 +93,16 @@ public class FarmGrid implements Grid {
         if ((farmType.equals("animal") && !isAnimal) || (farmType.equals("plant") && isAnimal)) {
             throw new IllegalArgumentException("Invalid item for this farm type!");
         }
-        Map<String, String> properties;
+        Map<String, String> properties = new LinkedHashMap<>();
         if (isAnimal) {
-            properties = Map.of("Fed", "false", "Collected", "false");
+            properties.put("Fed", "Fed: false");
+            properties.put("Collected", "Collected: false");
         } else {
-            properties = Map.of("Stage", "1");
+            properties.put("Stage", "Stage: 1");
         }
         return new GridItem(itemName, String.valueOf(symbol), properties);
     }
+
 
 
     /**
@@ -114,7 +116,7 @@ public class FarmGrid implements Grid {
     @Override
     public Product harvest(int row, int column) throws UnableToInteractException {
         if (!isValidPosition(row, column)) {
-            throw new UnableToInteractException("Invalid position");
+            throw new UnableToInteractException("You can't harvest this location");
         }
         GridItem item = farmState.get(getIndex(row, column));
         if (item.type.equals("ground")) {
@@ -135,13 +137,13 @@ public class FarmGrid implements Grid {
      * @throws UnableToInteractException if the animal cannot be harvested
      */
     private Product harvestAnimal(GridItem animal) throws UnableToInteractException {
-        if (!animal.attributes.get("Fed").equals("true")) {
+        if (!animal.attributes.get("Fed").equals("Fed: true")) {
             throw new UnableToInteractException("Animal not fed today!");
         }
-        if (animal.attributes.get("Collected").equals("true")) {
+        if (animal.attributes.get("Collected").equals("Collected: true")) {
             throw new UnableToInteractException("Already collected today!");
         }
-        animal.attributes.put("Collected", "true");
+        animal.attributes.put("Collected", "Collected: true");
         Quality quality = randomQuality.getRandomQuality();
         return switch (animal.type) {
             case "cow" -> new Milk(quality);
@@ -161,11 +163,11 @@ public class FarmGrid implements Grid {
     private Product harvestPlant(GridItem plant) throws UnableToInteractException {
         List<String> stages = GROWTH_STAGES.get(plant.type);
         if (stages == null || !plant.symbol.equals(stages.getLast())) {
-            throw new UnableToInteractException("Crop not fully grown!");
+            throw new UnableToInteractException("The crop is not fully grown!");
         }
         Quality quality = randomQuality.getRandomQuality();
         plant.symbol = stages.getFirst();
-        plant.attributes.put("Stage", "0");
+        plant.attributes.put("Stage", "Stage: 0");
         return switch (plant.type) {
             case "wheat" -> new Bread(quality);
             case "coffee" -> new Coffee(quality);
@@ -204,7 +206,7 @@ public class FarmGrid implements Grid {
         if (!isValidPosition(row, column)) return false;
         GridItem item = farmState.get(getIndex(row, column));
         if (item.type.equals("cow") || item.type.equals("chicken") || item.type.equals("sheep")) {
-            item.attributes.put("Fed", "true");
+            item.attributes.put("Fed", "Fed: true");
             return true;
         }
         return false;
@@ -246,7 +248,8 @@ public class FarmGrid implements Grid {
             int currentStage = stages.indexOf(plant.symbol);
             if (currentStage < stages.size() - 1) {
                 plant.symbol = stages.get(currentStage + 1);
-                plant.attributes.put("Stage", String.valueOf(currentStage + 2));
+                String stage = String.valueOf(currentStage + 2);
+                plant.attributes.put("Stage", "Stage: " + stage );
             }
         }
     }
@@ -258,8 +261,8 @@ public class FarmGrid implements Grid {
      */
     private void resetAnimal(GridItem animal) {
         if (animal.type.equals("cow") || animal.type.equals("chicken") || animal.type.equals("sheep")) {
-            animal.attributes.put("Fed", "false");
-            animal.attributes.put("Collected", "false");
+            animal.attributes.put("Fed", "Fed: false");
+            animal.attributes.put("Collected", "Collected: false");
         }
     }
 
@@ -294,7 +297,12 @@ public class FarmGrid implements Grid {
                     List<String> stats = new ArrayList<>();
                     stats.add(item.type);
                     stats.add(item.symbol);
-                    stats.addAll(item.attributes.values());
+                    if (item.type.equals("chicken") || item.type.equals("cow") || item.type.equals("sheep")) {
+                        stats.add(item.attributes.get("Fed"));
+                        stats.add(item.attributes.get("Collected"));
+                    } else {
+                        stats.addAll(item.attributes.values());
+                    }
                     return stats;
                 })
                 .toList();
