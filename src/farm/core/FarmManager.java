@@ -1,6 +1,6 @@
 package farm.core;
 
-import farm.debugged.farmgrid.*;
+import farm.core.farmgrid.*;
 import farm.customer.Customer;
 import farm.files.FileLoader;
 import farm.files.FileSaver;
@@ -149,7 +149,7 @@ public class FarmManager {
      */
     private void loadFarm(String filename) {
         try {
-            this.grid = (Grid) loader.load(filename);
+            this.grid = loader.load(filename);
         } catch (IOException | IllegalArgumentException exception) {
             shop.displayMessage(exception.getMessage());
         }
@@ -178,7 +178,7 @@ public class FarmManager {
             farm.stockProduct(convertProductName(productName), Quality.REGULAR, quantity);
             shop.displayProductAddSuccess();
         } catch (InvalidStockRequestException | IllegalArgumentException e) {
-            shop.displayProductAddFailed(e.getMessage()); 
+            shop.displayProductAddFailed(e.getMessage());
         }
     }
 
@@ -236,11 +236,11 @@ public class FarmManager {
     private List<String> newOrLoad() {
         return shop.newOrLoadSelect();
     }
-    
+
     private String getModeSelection() {
         return shop.promptModeSelect().getFirst().trim().toLowerCase();
     }
-    
+
     // -- MODE LAUNCHERS and INPUT VALIDATORS -- //
 
     /**
@@ -464,7 +464,7 @@ public class FarmManager {
         }
     }
 
-    private Map<Barcode, Integer> getDiscounts() { 
+    private Map<Barcode, Integer> getDiscounts() {
         shop.displayMessage("Entering Discount Setting!");
         Map<Barcode, Integer> discounts = new HashMap<>();
         String productName;
@@ -510,10 +510,10 @@ public class FarmManager {
                     | Average Discount:    %.0f`
                     |--------------------------
                     """, history.getTotalTransactionsMade(),
-                        history.getAverageSpendPerVisit() / 100.0f, barcode.getDisplayName(),
-                        history.getTotalProductsSold(barcode),
-                        history.getGrossEarnings(barcode) / 100.0f,
-                        history.getAverageProductDiscount(barcode)
+                                history.getAverageSpendPerVisit() / 100.0f, barcode.getDisplayName(),
+                                history.getTotalProductsSold(barcode),
+                                history.getGrossEarnings(barcode) / 100.0f,
+                                history.getAverageProductDiscount(barcode)
                         ).replace("`", "%")
                 );
             } catch (InvalidStockRequestException e) {
@@ -531,7 +531,7 @@ public class FarmManager {
             | Gross Earning        $%.2f
             |--------------------------
             """, history.getTotalTransactionsMade(), history.getAverageSpendPerVisit() / 100.0f,
-            history.getTotalProductsSold(), history.getGrossEarnings() / 100.0f));
+                history.getTotalProductsSold(), history.getGrossEarnings() / 100.0f));
     }
 
     /** Private Helper Methods **/
@@ -593,7 +593,7 @@ public class FarmManager {
                         shop.displayMessage("Enter the filename to save farm grid as: ");
                         filename = saveInput.nextLine().trim();
                         try {
-                            saver.save(filename, (farm.core.farmgrid.Grid) this.grid);
+                            saver.save(filename, this.grid);
                         } catch (IOException e) {
                             shop.displayMessage("There was an error saving your file: " + e.getMessage());
                         }
@@ -630,14 +630,14 @@ public class FarmManager {
                 }
 
                 case "feed" -> {
-                        try {
-                            int row = Integer.parseInt(input.get(1));
-                            int col = Integer.parseInt(input.get(2));
-                            grid.interact("feed", row, col);
-                            canSave = false;
-                        } catch (UnableToInteractException e) {
-                            shop.displayMessage(e.getMessage());
-                        }
+                    try {
+                        int row = Integer.parseInt(input.get(1));
+                        int col = Integer.parseInt(input.get(2));
+                        grid.interact("feed", row, col);
+                        canSave = false;
+                    } catch (UnableToInteractException e) {
+                        shop.displayMessage(e.getMessage());
+                    }
                 }
 
                 case "stats" -> {
