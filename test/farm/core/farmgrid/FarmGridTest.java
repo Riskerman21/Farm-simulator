@@ -267,6 +267,30 @@ public class FarmGridTest {
                 expectedStats(itemsPlacedAnimal), animalGrid.getStats());
     }
 
+    @Test
+    public void feedNonExistentAnimalGridTest() {
+        assertFalse("Feeding succeeded when there was nothing to feed",
+                attemptInteraction(animalGrid, FEED, 0, 0));
+        assertEquals("Animal grid stats were incorrect after failed feeding",
+                expectedStats(new HashMap<>()), animalGrid.getStats());
+    }
+
+    @Test
+    public void removeAnimalAfterHarvestTest() {
+        populateAnimalFarm(animalGrid);
+        attemptInteraction(animalGrid, FEED, 0, 0);
+        try {
+            animalGrid.harvest(0, 0);
+        } catch (UnableToInteractException e) {
+            fail(shouldNotThrow);
+        }
+        assertTrue("Removal failed after harvesting an animal",
+                attemptInteraction(animalGrid, REMOVE, 0, 0));
+        itemsPlacedAnimal.remove(convertToPosition(0, 0));
+        assertEquals("Animal grid stats were incorrect after removal post-harvest",
+                expectedStats(itemsPlacedAnimal), animalGrid.getStats());
+    }
+
     private void populatePlantGrownPlantGrid(Grid plantGrid) {
         populatePlantFarm(plantGrid);
         attemptInteraction(plantGrid, END_DAY, 0, 0);

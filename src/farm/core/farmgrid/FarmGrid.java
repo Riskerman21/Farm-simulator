@@ -176,7 +176,7 @@ public class FarmGrid implements Grid{
         // note System.lineSeparator() is just \n but ensures it works
         // on all operating systems.
 
-        for (int i=0; i < this.rows;) {
+        for (int i=0; i < this.rows; i++) {
             farmDisplay += "| ";
             for (int j=0; j < this.columns; j++) {
                 int positionIndex = (i * this.columns) + j;

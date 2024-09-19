@@ -1,6 +1,6 @@
 package farm.core;
 
-import farm.core.farmgrid.*;
+import farm.debugged.farmgrid.*;
 import farm.customer.Customer;
 import farm.files.FileLoader;
 import farm.files.FileSaver;
@@ -149,7 +149,7 @@ public class FarmManager {
      */
     private void loadFarm(String filename) {
         try {
-            this.grid = loader.load(filename);
+            this.grid = (Grid) loader.load(filename);
         } catch (IOException | IllegalArgumentException exception) {
             shop.displayMessage(exception.getMessage());
         }
@@ -593,7 +593,7 @@ public class FarmManager {
                         shop.displayMessage("Enter the filename to save farm grid as: ");
                         filename = saveInput.nextLine().trim();
                         try {
-                            saver.save(filename, this.grid);
+                            saver.save(filename, (farm.core.farmgrid.Grid) this.grid);
                         } catch (IOException e) {
                             shop.displayMessage("There was an error saving your file: " + e.getMessage());
                         }
