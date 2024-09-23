@@ -164,28 +164,60 @@ public class FarmGridTest {
     @Test
     public void harvestInvalidPositionAnimalGridTest() {
         populateAnimalFarm(animalGrid);
-        String exceptionMsg1 = assertThrows(UnableToInteractException.class,
-                () -> animalGrid.harvest(-5, 5)).getMessage();
-        String exceptionMsg2 = assertThrows(UnableToInteractException.class,
-                () -> animalGrid.harvest(INIT_ROW, INIT_COL)).getMessage();
-        String exceptionMsg3 = assertThrows(UnableToInteractException.class,
-                () -> animalGrid.harvest(10, -5)).getMessage();
 
-        assertEquals(expectedStats(itemsPlacedAnimal) ,animalGrid.getStats());
-        assertEquals("You can't harvest this location", exceptionMsg1);
-        assertEquals("You can't harvest this location", exceptionMsg2);
-        assertEquals("You can't harvest this location", exceptionMsg3);
+        boolean exceptionThrown = false;
+        try {
+            animalGrid.harvest(-5, 5);
+        } catch (UnableToInteractException e) {
+            exceptionThrown = true;
+            assertEquals("You can't harvest this location", e.getMessage());
+        }
+
+        assertTrue(exceptionThrown);
+
+        try {
+            animalGrid.harvest(INIT_ROW, INIT_COL);
+        } catch (UnableToInteractException e) {
+            exceptionThrown = true;
+            assertEquals("You can't harvest this location", e.getMessage());
+        }
+
+        assertTrue(exceptionThrown);
+
+        try {
+            animalGrid.harvest(10, -5);
+        } catch (UnableToInteractException e) {
+            exceptionThrown = true;
+            assertEquals("You can't harvest this location", e.getMessage());
+        }
+
+        assertTrue(exceptionThrown);
+
+        assertEquals(expectedStats(itemsPlacedAnimal), animalGrid.getStats());
     }
 
     @Test
     public void harvestPlantEarlyTest() {
         populatePlantFarm(plantGrid);
-        String errorMsg1 = assertThrows(UnableToInteractException.class,
-                () -> plantGrid.harvest(0, 0)).getMessage();
-        String errorMsg2 = assertThrows(UnableToInteractException.class,
-                () -> plantGrid.harvest(INIT_ROW/2, INIT_COL/2)).getMessage();
-        assertEquals(errorMsg1, "The crop is not fully grown!");
-        assertEquals(errorMsg2, "The crop is not fully grown!");
+
+        boolean exceptionThrown = false;
+        try {
+            plantGrid.harvest(0, 0);
+        } catch (UnableToInteractException e) {
+            exceptionThrown = true;
+            assertEquals("The crop is not fully grown!", e.getMessage());
+        }
+
+        assertTrue(exceptionThrown);
+
+        try {
+            plantGrid.harvest(INIT_ROW / 2, INIT_COL / 2);
+        } catch (UnableToInteractException e) {
+            exceptionThrown = true;
+            assertEquals("The crop is not fully grown!", e.getMessage());
+        }
+
+        assertTrue(exceptionThrown);
     }
 
     @Test
