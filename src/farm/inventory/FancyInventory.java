@@ -24,7 +24,6 @@ public class FancyInventory implements Inventory {
         } catch (InvalidStockRequestException ignored) {
             // never thrown by a fancy inventory
         }
-        
     }
 
     /**
@@ -42,7 +41,7 @@ public class FancyInventory implements Inventory {
 
     @Override
     public boolean existsProduct(Barcode barcode) {
-        return (stockedProducts.containsKey(barcode));
+        return stockedProducts.containsKey(barcode) && !stockedProducts.get(barcode).isEmpty();
     }
 
     /**
@@ -59,7 +58,7 @@ public class FancyInventory implements Inventory {
         }
         return List.of(getHighestQualityProduct(stockedProducts.get(barcode)));
     }
-    
+
     /**
      * Removes a given number of products with corresponding barcode from the inventory, choosing the highest quality products possible.
      * <p>
@@ -123,14 +122,14 @@ public class FancyInventory implements Inventory {
         List<Product> products = new ArrayList<>(quantity);
         for (int i = 0; i < quantity; i++) {
             products.addLast(
-                switch (barcode) {
-                    case Barcode.EGG -> new Egg(quality);
-                    case Barcode.MILK -> new Milk(quality);
-                    case Barcode.JAM -> new Jam(quality);
-                    case Barcode.WOOL -> new Wool(quality);
-                    case Barcode.BREAD -> new Bread(quality);
-                    case Barcode.COFFEE -> new Coffee(quality);
-                }
+                    switch (barcode) {
+                        case Barcode.EGG -> new Egg(quality);
+                        case Barcode.MILK -> new Milk(quality);
+                        case Barcode.JAM -> new Jam(quality);
+                        case Barcode.WOOL -> new Wool(quality);
+                        case Barcode.BREAD -> new Bread(quality);
+                        case Barcode.COFFEE -> new Coffee(quality);
+                    }
             );
         }
         return products;

@@ -10,10 +10,10 @@ import java.util.*;
  */
 public class ShopFront {
     public static final String CAT = """
-                  ╱|、
-                (˚ˎ 。7
-                 |、˜〵
-                 じしˍ,)ノ
+                  â•±|ã€
+                (ËšËŽ ã€‚7
+                 |ã€Ëœã€µ
+                 ã˜ã—Ë,)ãƒŽ
                 """;
 
     public static final String BARN = """
@@ -93,6 +93,7 @@ public class ShopFront {
                 - q: Quit the application.
                 - place <object> <row> <column>: Place the object at the specified coordinate.
                 - remove <row> <column>: Remove the object at the specified coordinate.
+                - harvest <row> <column>: Harvests the product at the specified coordinate, placing it in the inventory.
                 - save: Save the current farm to a file.
                 - load: Load a new farm.
                 - end-day: End day on the farm and start new day.

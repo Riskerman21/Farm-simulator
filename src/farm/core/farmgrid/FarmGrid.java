@@ -67,7 +67,7 @@ public class FarmGrid implements Grid {
     public boolean place(int row, int column, char symbol) throws IllegalStateException {
         if (!isValidPosition(row, column)) return false;
         String itemName = SYMBOL_TO_ITEM.get(symbol);
-        if (itemName == null) return false;
+        if (itemName == null) return false; //invalid item
         int index = getIndex(row, column);
         if (!symbols.get(index).equals(" ")) {
             throw new IllegalStateException("Something is already there!");
@@ -92,7 +92,7 @@ public class FarmGrid implements Grid {
         types.set(index, itemName);
         symbols.set(index, String.valueOf(symbol));
         Map<String, String> properties = attributes.get(index);
-        properties.clear();
+        properties.clear(); //remove ground attribute
         if (isAnimal) {
             properties.put("Fed", "Fed: false");
             properties.put("Collected", "Collected: false");
