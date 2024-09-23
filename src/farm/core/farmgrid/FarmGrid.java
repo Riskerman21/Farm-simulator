@@ -40,11 +40,13 @@ public class FarmGrid implements Grid {
         this.rows = rows;
         this.columns = columns;
         this.farmType = farmType;
-        this.types = new ArrayList<>(rows * columns);
-        this.symbols = new ArrayList<>(rows * columns);
-        this.attributes = new ArrayList<>(rows * columns);
+        int size = rows * columns;
+        this.types = new ArrayList<>(size);
+        this.symbols = new ArrayList<>(size);
+        this.attributes = new ArrayList<>(size);
         this.randomQuality = new RandomQuality();
-        for (int i = 0; i < rows * columns; i++) {
+
+        for (int i = 0; i < size; i++) {
             types.add("ground");
             symbols.add(" ");
             attributes.add(new HashMap<>());
@@ -89,14 +91,14 @@ public class FarmGrid implements Grid {
         }
         types.set(index, itemName);
         symbols.set(index, String.valueOf(symbol));
-        Map<String, String> properties = new LinkedHashMap<>();
+        Map<String, String> properties = attributes.get(index);
+        properties.clear();
         if (isAnimal) {
             properties.put("Fed", "Fed: false");
             properties.put("Collected", "Collected: false");
         } else {
             properties.put("Stage", "Stage: 1");
         }
-        attributes.set(index, properties);
     }
 
     @Override
@@ -109,11 +111,7 @@ public class FarmGrid implements Grid {
         if (type.equals("ground")) {
             throw new UnableToInteractException("Can't harvest an empty spot!");
         }
-        if (farmType.equals("animal")) {
-            return harvestAnimal(index);
-        } else {
-            return harvestPlant(index);
-        }
+        return farmType.equals("animal") ? harvestAnimal(index) : harvestPlant(index);
     }
 
     /**
@@ -204,7 +202,7 @@ public class FarmGrid implements Grid {
             int index = getIndex(row, column);
             types.set(index, "ground");
             symbols.set(index, " ");
-            attributes.set(index, new HashMap<>());
+            attributes.get(index).clear();
         }
     }
 
@@ -255,23 +253,22 @@ public class FarmGrid implements Grid {
 
     @Override
     public String farmDisplay() {
-        StringBuilder display = new StringBuilder("-".repeat((columns * 2) + 3) + "\n");
+        StringBuilder display = new StringBuilder("-".repeat((columns * 2) + 3)).append('\n');
         for (int i = 0; i < rows; i++) {
             display.append("| ");
             for (int j = 0; j < columns; j++) {
-                display.append(symbols.get(getIndex(i, j))).append(" ");
+                display.append(symbols.get(getIndex(i, j))).append(' ');
             }
             display.append("|\n");
         }
-        display.append("-".repeat((columns * 2) + 3)).append("\n");
-        return display.toString();
+        return display.append("-".repeat((columns * 2) + 3)).append('\n').toString();
     }
 
     @Override
     public List<List<String>> getStats() {
-        List<List<String>> stats = new ArrayList<>();
+        List<List<String>> stats = new ArrayList<>(types.size());
         for (int i = 0; i < types.size(); i++) {
-            List<String> itemStats = new ArrayList<>();
+            List<String> itemStats = new ArrayList<>(2 + attributes.get(i).size());
             itemStats.add(types.get(i));
             itemStats.add(symbols.get(i));
             itemStats.addAll(attributes.get(i).values());
