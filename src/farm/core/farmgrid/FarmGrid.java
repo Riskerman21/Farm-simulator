@@ -46,10 +46,11 @@ public class FarmGrid implements Grid {
         this.attributes = new ArrayList<>(size);
         this.randomQuality = new RandomQuality();
 
+        //setup an empty map
         for (int i = 0; i < size; i++) {
-            types.add("ground");
-            symbols.add(" ");
-            attributes.add(new HashMap<>());
+            this.types.add("ground");
+            this.symbols.add(" ");
+            this.attributes.add(new HashMap<>());
         }
     }
 
@@ -65,7 +66,7 @@ public class FarmGrid implements Grid {
 
     @Override
     public boolean place(int row, int column, char symbol) throws IllegalStateException {
-        if (!isValidPosition(row, column)) return false;
+        if (!isValidPosition(row, column)) return false; //invalid position
         String itemName = SYMBOL_TO_ITEM.get(symbol);
         if (itemName == null) return false; //invalid item
         int index = getIndex(row, column);
@@ -122,6 +123,7 @@ public class FarmGrid implements Grid {
      * @throws UnableToInteractException if the animal cannot be harvested
      */
     private Product harvestAnimal(int index) throws UnableToInteractException {
+        //grabbing animal attributes
         Map<String, String> animalAttributes = attributes.get(index);
         if (!animalAttributes.get("Fed").equals("Fed: true")) {
             throw new UnableToInteractException("Animal not fed today!");
@@ -147,14 +149,17 @@ public class FarmGrid implements Grid {
      * @throws UnableToInteractException if the plant cannot be harvested
      */
     private Product harvestPlant(int index) throws UnableToInteractException {
-        String type = types.get(index);
+        //grabbing plant attributes
+        String type = this.types.get(index);
         List<String> stages = GROWTH_STAGES.get(type);
-        if (stages == null || !symbols.get(index).equals(stages.getLast())) {
+        //only harvestable at final stage
+        if (!this.symbols.get(index).equals(stages.getLast())) {
             throw new UnableToInteractException("The crop is not fully grown!");
         }
-        Quality quality = randomQuality.getRandomQuality();
-        symbols.set(index, stages.getFirst());
-        attributes.get(index).put("Stage", "Stage: 0");
+        Quality quality = this.randomQuality.getRandomQuality();
+        //harvesting resets plant
+        this.symbols.set(index, stages.getFirst());
+        this.attributes.get(index).put("Stage", "Stage: 0");
         return switch (type) {
             case "wheat" -> new Bread(quality);
             case "coffee" -> new Coffee(quality);
@@ -184,6 +189,7 @@ public class FarmGrid implements Grid {
         if (!isValidPosition(row, column)) return false;
         int index = getIndex(row, column);
         String type = types.get(index);
+        //can only feed animal
         if (type.equals("cow") || type.equals("chicken") || type.equals("sheep")) {
             attributes.get(index).put("Fed", "Fed: true");
             return true;
@@ -200,6 +206,7 @@ public class FarmGrid implements Grid {
     private void remove(int row, int column) {
         if (isValidPosition(row, column)) {
             int index = getIndex(row, column);
+            //add back the ground attributes
             types.set(index, "ground");
             symbols.set(index, " ");
             attributes.get(index).clear();
@@ -210,6 +217,7 @@ public class FarmGrid implements Grid {
      * Advances the farm to the next day, updating all items on the grid.
      */
     public void endDay() {
+        //loop through all things in a farm
         for (int i = 0; i < types.size(); i++) {
             if (farmType.equals("plant")) {
                 growPlant(i);
@@ -227,8 +235,10 @@ public class FarmGrid implements Grid {
     private void growPlant(int index) {
         String type = types.get(index);
         List<String> stages = GROWTH_STAGES.get(type);
+        //no stages if ground
         if (stages != null) {
             int currentStage = stages.indexOf(symbols.get(index));
+            //increase stage if possible (ie. not out of stages)
             if (currentStage < stages.size() - 1) {
                 symbols.set(index, stages.get(currentStage + 1));
                 String stage = String.valueOf(currentStage + 2);
@@ -253,20 +263,26 @@ public class FarmGrid implements Grid {
 
     @Override
     public String farmDisplay() {
+        //top border
         StringBuilder display = new StringBuilder("-".repeat((columns * 2) + 3)).append('\n');
         for (int i = 0; i < rows; i++) {
+            //border
             display.append("| ");
+            //blank spaces the size of the farm
             for (int j = 0; j < columns; j++) {
                 display.append(symbols.get(getIndex(i, j))).append(' ');
             }
+            //new line at the end of every row
             display.append("|\n");
         }
+        //return with bottom border
         return display.append("-".repeat((columns * 2) + 3)).append('\n').toString();
     }
 
     @Override
     public List<List<String>> getStats() {
         List<List<String>> stats = new ArrayList<>(types.size());
+        //return the type and attribute of every element in the farm
         for (int i = 0; i < types.size(); i++) {
             List<String> itemStats = new ArrayList<>(2 + attributes.get(i).size());
             itemStats.add(types.get(i));
@@ -279,12 +295,12 @@ public class FarmGrid implements Grid {
 
     @Override
     public int getRows() {
-        return rows;
+        return this.rows;
     }
 
     @Override
     public int getColumns() {
-        return columns;
+        return this.columns;
     }
 
     /**
@@ -295,7 +311,7 @@ public class FarmGrid implements Grid {
      * @return true if the position is valid, false otherwise
      */
     private boolean isValidPosition(int row, int column) {
-        return row >= 0 && row < rows && column >= 0 && column < columns;
+        return row >= 0 && row < this.rows && column >= 0 && column < this.columns;
     }
 
     /**
@@ -306,6 +322,6 @@ public class FarmGrid implements Grid {
      * @return the corresponding index in the grid lists
      */
     private int getIndex(int row, int column) {
-        return row * columns + column;
+        return row * this.columns + column;
     }
 }
