@@ -324,4 +324,9 @@ public class FarmGrid implements Grid {
     private int getIndex(int row, int column) {
         return row * this.columns + column;
     }
+
+    @Override
+    public String toString() {
+        return farmType;
+    }
 }
