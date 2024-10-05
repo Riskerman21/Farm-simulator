@@ -2,7 +2,6 @@ package farm.debugged.farmgrid;
 
 import farm.core.UnableToInteractException;
 import farm.inventory.product.Product;
-
 import java.util.List;
 
 /**
@@ -57,12 +56,12 @@ public interface Grid {
     List<List<String>> getStats();
 
     /**
-     * @return the number of rows in the grid.
+     * returns the number of rows in the grid.
      */
     int getRows();
 
     /**
-     * @return the number of columns in the grid.
+     * returns the number of columns in the grid.
      */
     int getColumns();
 }

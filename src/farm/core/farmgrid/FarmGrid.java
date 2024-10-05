@@ -15,7 +15,8 @@ public class FarmGrid implements Grid {
     private final List<String> types;
     private final List<String> symbols;
     private final List<Map<String, String>> attributes;
-    private final int rows, columns;
+    private final int rows;
+    private final int columns;
     private final String farmType;
     private final RandomQuality randomQuality;
 
@@ -66,9 +67,13 @@ public class FarmGrid implements Grid {
 
     @Override
     public boolean place(int row, int column, char symbol) throws IllegalStateException {
-        if (!isValidPosition(row, column)) return false; //invalid position
+        if (!isValidPosition(row, column)) {
+            return false; //invalid position
+        }
         String itemName = SYMBOL_TO_ITEM.get(symbol);
-        if (itemName == null) return false; //invalid item
+        if (itemName == null) {
+            return false; //invalid item
+        }
         int index = getIndex(row, column);
         if (!symbols.get(index).equals(" ")) {
             throw new IllegalStateException("Something is already there!");
@@ -86,7 +91,8 @@ public class FarmGrid implements Grid {
      * @throws IllegalArgumentException If the item type does not match the farm type.
      */
     private void placeItem(int index, char symbol, String itemName) {
-        boolean isAnimal = itemName.equals("chicken") || itemName.equals("cow") || itemName.equals("sheep");
+        boolean isAnimal = itemName.equals("chicken")
+                || itemName.equals("cow") || itemName.equals("sheep");
         if ((farmType.equals("animal") && !isAnimal) || (farmType.equals("plant") && isAnimal)) {
             throw new IllegalArgumentException("Invalid item for this farm type!");
         }
@@ -172,8 +178,14 @@ public class FarmGrid implements Grid {
     public boolean interact(String command, int row, int column) throws UnableToInteractException {
         return switch (command) {
             case "feed" -> feed(row, column);
-            case "end-day" -> { endDay(); yield true; }
-            case "remove" -> { remove(row, column); yield true; }
+            case "end-day" -> {
+                endDay();
+                yield true;
+            }
+            case "remove" -> {
+                remove(row, column);
+                yield true;
+            }
             default -> throw new UnableToInteractException("Unknown command: " + command);
         };
     }
@@ -186,7 +198,9 @@ public class FarmGrid implements Grid {
      * @return true if the animal was successfully fed, false otherwise
      */
     private boolean feed(int row, int column) {
-        if (!isValidPosition(row, column)) return false;
+        if (!isValidPosition(row, column)) {
+            return false;
+        }
         int index = getIndex(row, column);
         String type = types.get(index);
         //can only feed animal

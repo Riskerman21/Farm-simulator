@@ -11,13 +11,13 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 
-public class BasicInventoryTest {
-    private BasicInventory inventory;
+public class FancyInventoryTest {
+    private FancyInventory inventory;
     private List<Product> testproduct;
 
     @Before
     public void setUp(){
-        inventory = new BasicInventory();
+        inventory = new FancyInventory();
         testproduct = new ArrayList<>();
 
     }
@@ -36,8 +36,8 @@ public class BasicInventoryTest {
 
     @Test
     public void testADDMultipleProduct() {
-        testproduct.add(new Jam());
         testproduct.add(new Egg());
+        testproduct.add(new Jam());
         inventory.addProduct(new Jam().getBarcode(), Quality.REGULAR);
         inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR);
         assertEquals(testproduct, inventory.getAllProducts());
@@ -66,23 +66,22 @@ public class BasicInventoryTest {
     }
 
     @Test
-    public void testAddProductByQuantity() {
-        try {
-            inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR, 2);
-        } catch (InvalidStockRequestException e) {
-            assertEquals(e.getMessage(), "Current inventory is not fancy enough. "
-                    + "Please supply products one at a time.");
-        }
+    public void testAddProductByQuantity() throws InvalidStockRequestException {
+        inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR, 2);
+        inventory.addProduct(new Jam().getBarcode(), Quality.REGULAR, 2);
+        testproduct.add(new Egg());
+        testproduct.add(new Egg());
+        testproduct.add(new Jam());
+        testproduct.add(new Jam());
+        assertEquals(testproduct, inventory.getAllProducts());
     }
 
     @Test
-    public void testRemoveProductByQuantity() {
-        try {
-            inventory.removeProduct(new Egg().getBarcode(), 2);
-        } catch (FailedTransactionException e) {
-            assertEquals(e.getMessage(), "Current inventory is not fancy enough. "
-                    + "Please purchase products one at a time.");
-        }
+    public void testRemoveProductByQuantity() throws FailedTransactionException {
+        inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR);
+        inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR);
+        inventory.removeProduct(new Egg().getBarcode(), 2);
+        assertEquals(testproduct, inventory.getAllProducts());
     }
 
     @Test
