@@ -11,9 +11,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * The class that loads a saved text file of the grid into a gird in the game
+ */
 public class FileLoader {
-    private String farmType;
-
     /**
      * Constructor for the FileLoader
      */
@@ -24,15 +25,17 @@ public class FileLoader {
      * Loads contents of the specified file into a Grid.
      * @param filename the String filename to read contents from.
      * @return a grid instance.
-     * @throws IOException
+     * @throws IOException if the file doesn't exist
      */
     public Grid load(String filename) throws IOException {
+        String farmType;
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
             String line;
             farmType = reader.readLine();
             int rows = 0;
             int columns = 0;
             List<List<String>> info = new ArrayList<>();
+
 
             if ((line = reader.readLine()) != null) {
                 rows = Integer.parseInt(line.split(": ")[1]);
@@ -72,7 +75,7 @@ public class FileLoader {
                     j = 0;
                     i++;
                 }
-                if (!tile.getFirst().equals("ground")){
+                if (!tile.getFirst().equals("ground")) {
                     grid.place(i, j, tile.get(1).charAt(0));
                 }
                 j++;
