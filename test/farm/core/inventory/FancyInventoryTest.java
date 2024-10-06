@@ -13,67 +13,67 @@ import static org.junit.Assert.*;
 
 public class FancyInventoryTest {
     private FancyInventory inventory;
-    private List<Product> testproduct;
+    private List<Product> tesProduct;
 
     @Before
     public void setUp(){
         inventory = new FancyInventory();
-        testproduct = new ArrayList<>();
+        tesProduct = new ArrayList<>();
 
     }
 
     @Test
     public void testBasicInventory() {
-        assertEquals(testproduct, inventory.getAllProducts());
+        assertEquals(tesProduct, inventory.getAllProducts());
     }
 
     @Test
     public void testAddProduct() {
-        testproduct.add(new Egg());
+        tesProduct.add(new Egg());
         inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR);
-        assertEquals(testproduct, inventory.getAllProducts());
+        assertEquals(tesProduct, inventory.getAllProducts());
     }
 
     @Test
     public void testADDMultipleProduct() {
-        testproduct.add(new Egg());
-        testproduct.add(new Jam());
+        tesProduct.add(new Egg());
+        tesProduct.add(new Jam());
         inventory.addProduct(new Jam().getBarcode(), Quality.REGULAR);
         inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR);
-        assertEquals(testproduct, inventory.getAllProducts());
-        testproduct.add(new Jam());
+        assertEquals(tesProduct, inventory.getAllProducts());
+        tesProduct.add(new Jam());
         inventory.addProduct(new Jam().getBarcode(), Quality.REGULAR);
-        assertEquals(testproduct, inventory.getAllProducts());
+        assertEquals(tesProduct, inventory.getAllProducts());
     }
 
     @Test
     public void testRemoveProduct() {
-        testproduct.add(new Egg());
+        tesProduct.add(new Egg());
         inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR);
-        assertEquals(testproduct, inventory.removeProduct(new Egg().getBarcode()));
+        assertEquals(tesProduct, inventory.removeProduct(new Egg().getBarcode()));
         assertEquals(new ArrayList<>(), inventory.getAllProducts());
     }
 
     @Test
     public void testRemoveMultipleProduct() {
-        testproduct.add(new Jam());
+        tesProduct.add(new Jam());
         inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR);
         inventory.addProduct(new Jam().getBarcode(), Quality.REGULAR);
-        assertEquals(testproduct, inventory.removeProduct(new Jam().getBarcode()));
-        testproduct.removeFirst();
-        testproduct.add(new Egg());
-        assertEquals(testproduct, inventory.getAllProducts());
+        assertEquals(tesProduct, inventory.removeProduct(new Jam().getBarcode()));
+        tesProduct.removeFirst();
+        tesProduct.add(new Egg());
+        assertEquals(tesProduct, inventory.getAllProducts());
     }
 
     @Test
     public void testAddProductByQuantity() throws InvalidStockRequestException {
         inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR, 2);
         inventory.addProduct(new Jam().getBarcode(), Quality.REGULAR, 2);
-        testproduct.add(new Egg());
-        testproduct.add(new Egg());
-        testproduct.add(new Jam());
-        testproduct.add(new Jam());
-        assertEquals(testproduct, inventory.getAllProducts());
+        tesProduct.add(new Egg());
+        tesProduct.add(new Egg());
+        tesProduct.add(new Jam());
+        tesProduct.add(new Jam());
+        assertEquals(tesProduct, inventory.getAllProducts());
     }
 
     @Test
@@ -81,7 +81,7 @@ public class FancyInventoryTest {
         inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR);
         inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR);
         inventory.removeProduct(new Egg().getBarcode(), 2);
-        assertEquals(testproduct, inventory.getAllProducts());
+        assertEquals(tesProduct, inventory.getAllProducts());
     }
 
     @Test
