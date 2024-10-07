@@ -1,97 +1,99 @@
-package farm.core.inventory;
+package farm.inventory;
 
 import farm.core.FailedTransactionException;
 import farm.core.InvalidStockRequestException;
-import farm.inventory.*;
-import farm.inventory.product.*;
-import farm.inventory.product.data.*;
-import org.junit.*;
+import farm.inventory.product.Egg;
+import farm.inventory.product.Jam;
+import farm.inventory.product.Product;
+import farm.inventory.product.data.Barcode;
+import farm.inventory.product.data.Quality;
+import org.junit.Before;
+import org.junit.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import static org.junit.Assert.*;
 
 
-public class BasicInventoryTest {
-    private BasicInventory inventory;
-    private List<Product> testProduct;
+public class FancyInventoryTest {
+    private FancyInventory inventory;
+    private List<Product> tesProduct;
 
     @Before
     public void setUp(){
-        inventory = new BasicInventory();
-        testProduct = new ArrayList<>();
+        inventory = new FancyInventory();
+        tesProduct = new ArrayList<>();
 
     }
 
     @Test
     public void testBasicInventory() {
-        assertEquals(testProduct, inventory.getAllProducts());
+        assertEquals(tesProduct, inventory.getAllProducts());
     }
 
     @Test
     public void testAddProduct() {
-        testProduct.add(new Egg());
+        tesProduct.add(new Egg());
         inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR);
-        assertEquals(testProduct, inventory.getAllProducts());
+        assertEquals(tesProduct, inventory.getAllProducts());
     }
 
     @Test
     public void testADDMultipleProduct() {
-        testProduct.add(new Jam());
-        testProduct.add(new Egg());
+        tesProduct.add(new Egg());
+        tesProduct.add(new Jam());
         inventory.addProduct(new Jam().getBarcode(), Quality.REGULAR);
         inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR);
-        assertEquals(testProduct, inventory.getAllProducts());
-        testProduct.add(new Jam());
+        assertEquals(tesProduct, inventory.getAllProducts());
+        tesProduct.add(new Jam());
         inventory.addProduct(new Jam().getBarcode(), Quality.REGULAR);
-        assertEquals(testProduct, inventory.getAllProducts());
+        assertEquals(tesProduct, inventory.getAllProducts());
     }
 
     @Test
     public void testRemoveProduct() {
-        testProduct.add(new Egg());
+        tesProduct.add(new Egg());
         inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR);
-        assertEquals(testProduct, inventory.removeProduct(new Egg().getBarcode()));
+        assertEquals(tesProduct, inventory.removeProduct(new Egg().getBarcode()));
         assertEquals(new ArrayList<>(), inventory.getAllProducts());
     }
 
     @Test
     public void testRemoveMultipleProduct() {
-        inventory.addProduct(new Jam().getBarcode(), Quality.REGULAR);
+        tesProduct.add(new Jam());
         inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR);
-
-        List<Product> removed = inventory.removeProduct(new Jam().getBarcode());
-        assertEquals(1, removed.size());
-        assertEquals(new Jam(Quality.REGULAR), removed.getFirst());
-
-        assertEquals(1, inventory.getAllProducts().size());
-        assertEquals(new Egg(Quality.REGULAR), inventory.getAllProducts().getFirst());
+        inventory.addProduct(new Jam().getBarcode(), Quality.REGULAR);
+        assertEquals(tesProduct, inventory.removeProduct(new Jam().getBarcode()));
+        tesProduct.removeFirst();
+        tesProduct.add(new Egg());
+        assertEquals(tesProduct, inventory.getAllProducts());
     }
 
     @Test
-    public void testAddProductByQuantity() {
-        try {
-            inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR, 2);
-        } catch (InvalidStockRequestException e) {
-            assertEquals(e.getMessage(), "Current inventory is not fancy enough. "
-                    + "Please supply products one at a time.");
-        }
+    public void testAddProductByQuantity() throws InvalidStockRequestException {
+        inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR, 2);
+        inventory.addProduct(new Jam().getBarcode(), Quality.REGULAR, 2);
+        tesProduct.add(new Egg());
+        tesProduct.add(new Egg());
+        tesProduct.add(new Jam());
+        tesProduct.add(new Jam());
+        assertEquals(tesProduct, inventory.getAllProducts());
     }
 
     @Test
-    public void testRemoveProductByQuantity() {
-        try {
-            inventory.removeProduct(new Egg().getBarcode(), 2);
-        } catch (FailedTransactionException e) {
-            assertEquals(e.getMessage(), "Current inventory is not fancy enough. "
-                    + "Please purchase products one at a time.");
-        }
+    public void testRemoveProductByQuantity() throws FailedTransactionException {
+        inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR);
+        inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR);
+        inventory.removeProduct(new Egg().getBarcode(), 2);
+        assertEquals(tesProduct, inventory.getAllProducts());
     }
 
     @Test
     public void testExistsProduct() {
-        inventory.addProduct(Barcode.EGG, Quality.REGULAR);
-        assertTrue(inventory.existsProduct(Barcode.EGG));
-        assertFalse(inventory.existsProduct(Barcode.JAM));
+        inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR);
+        assertTrue(inventory.existsProduct(new Egg().getBarcode()));
     }
 
     @Test
@@ -103,6 +105,7 @@ public class BasicInventoryTest {
     public void existsProductNull(){
         assertFalse(inventory.existsProduct(null));
     }
+
 
     @Test
     public void testAddNullProductError() {
@@ -159,7 +162,6 @@ public class BasicInventoryTest {
         inventory.addProduct(Barcode.EGG, null);
     }
 
-
     @Test
     public void testLargeInventory() {
         for (int i = 0; i < 100000; i++) {
@@ -192,5 +194,4 @@ public class BasicInventoryTest {
 
         assertTrue(secondRemoval.isEmpty());
     }
-
 }
