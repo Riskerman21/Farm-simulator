@@ -157,7 +157,11 @@ public class BasicInventoryTest {
         inventory.addProduct(Barcode.EGG, Quality.REGULAR);
         inventory.addProduct(Barcode.EGG, Quality.SILVER);
         inventory.addProduct(Barcode.EGG, Quality.GOLD);
-        assertEquals(4, inventory.getAllProducts().size());
+        testProduct.add(new Egg(Quality.IRIDIUM));
+        testProduct.add(new Egg(Quality.GOLD));
+        testProduct.add(new Egg(Quality.SILVER));
+        testProduct.add(new Egg(Quality.REGULAR));
+        assertEquals(testProduct, inventory.getAllProducts());
     }
 
     @Test
