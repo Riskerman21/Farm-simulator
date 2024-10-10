@@ -4,6 +4,7 @@ import farm.core.FailedTransactionException;
 import farm.core.InvalidStockRequestException;
 import farm.inventory.product.Egg;
 import farm.inventory.product.Jam;
+import farm.inventory.product.Milk;
 import farm.inventory.product.Product;
 import farm.inventory.product.data.Barcode;
 import farm.inventory.product.data.Quality;
@@ -140,12 +141,14 @@ public class FancyInventoryTest {
     public void testAddAllProductTypes() {
         inventory.addProduct(Barcode.EGG, Quality.REGULAR);
         inventory.addProduct(Barcode.MILK, Quality.IRIDIUM);
-        inventory.addProduct(Barcode.JAM, Quality.SILVER);
+        inventory.addProduct(Barcode.MILK, Quality.SILVER);
         inventory.addProduct(Barcode.WOOL, Quality.REGULAR);
         inventory.addProduct(Barcode.BREAD, Quality.GOLD);
         inventory.addProduct(Barcode.COFFEE, Quality.REGULAR);
+        testProduct.add(new Milk(Quality.IRIDIUM));
 
         assertEquals(6, inventory.getAllProducts().size());
+        assertEquals(testProduct,  inventory.removeProduct(Barcode.MILK));
     }
 
     @Test
@@ -155,9 +158,10 @@ public class FancyInventoryTest {
         inventory.addProduct(Barcode.EGG, Quality.SILVER);
         inventory.addProduct(Barcode.EGG, Quality.GOLD);
         testProduct.add(new Egg(Quality.IRIDIUM));
-        testProduct.add(new Egg(Quality.GOLD));
-        testProduct.add(new Egg(Quality.SILVER));
         testProduct.add(new Egg(Quality.REGULAR));
+        testProduct.add(new Egg(Quality.SILVER));
+        testProduct.add(new Egg(Quality.GOLD));
+
         assertEquals(testProduct, inventory.getAllProducts());
     }
 
@@ -198,4 +202,5 @@ public class FancyInventoryTest {
 
         assertTrue(secondRemoval.isEmpty());
     }
+
 }

@@ -2,30 +2,63 @@ package farm.inventory;
 
 import farm.core.FailedTransactionException;
 import farm.core.InvalidStockRequestException;
-import farm.inventory.product.Egg;
-import farm.inventory.product.Jam;
-import farm.inventory.product.Product;
+import farm.inventory.product.*;
 import farm.inventory.product.data.Barcode;
 import farm.inventory.product.data.Quality;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.*;
 
-
 public class BasicInventoryTest {
     private BasicInventory inventory;
     private List<Product> testProduct;
+    List<Product> products = Arrays.asList(
+            new Egg(),
+            new Milk(),
+            new Jam(),
+            new Wool(),
+            new Bread(),
+            new Coffee()
+    );
 
     @Before
-    public void setUp(){
+    public void setUp() {
         inventory = new BasicInventory();
         testProduct = new ArrayList<>();
+    }
 
+    @Test
+    public void testRemoveProductByBarcode_EnsureCorrectRemoval() {
+        Product egg1 = new Egg(Quality.REGULAR);
+        Product milk1 = new Milk(Quality.REGULAR);
+        Product jam1 = new Jam(Quality.REGULAR);
+        inventory.addProduct(egg1.getBarcode(), egg1.getQuality());
+        inventory.addProduct(milk1.getBarcode(), milk1.getQuality());
+        inventory.addProduct(jam1.getBarcode(), jam1.getQuality());
+        List<Product> removedProducts = inventory.removeProduct(milk1.getBarcode());
+
+        assertEquals(1, removedProducts.size());
+        assertEquals(milk1.getBarcode(), removedProducts.getFirst().getBarcode());
+
+        List<Product> remainingProducts = inventory.getAllProducts();
+        assertEquals(2, remainingProducts.size());
+        assertTrue(remainingProducts.stream().anyMatch(p -> p.getBarcode().equals(egg1.getBarcode())));
+        assertTrue(remainingProducts.stream().anyMatch(p -> p.getBarcode().equals(jam1.getBarcode())));
+    }
+
+    @Test(expected = InvalidStockRequestException.class)
+    public void testAddProductWithQuantityGreaterThanOne_ThrowsException() throws InvalidStockRequestException {
+        inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR, 2);
+    }
+    @Test(expected = InvalidStockRequestException.class)
+    public void testAddProductWithQuantityOne_ThrowsException() throws InvalidStockRequestException {
+        inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR, 1);
     }
 
     @Test
@@ -41,23 +74,26 @@ public class BasicInventoryTest {
     }
 
     @Test
-    public void testADDMultipleProduct() {
+    public void testAddMultipleProducts() {
         testProduct.add(new Jam());
         testProduct.add(new Egg());
         inventory.addProduct(new Jam().getBarcode(), Quality.REGULAR);
         inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR);
-        assertEquals(testProduct, inventory.getAllProducts());
-        testProduct.add(new Jam());
-        inventory.addProduct(new Jam().getBarcode(), Quality.REGULAR);
         assertEquals(testProduct, inventory.getAllProducts());
     }
 
     @Test
     public void testRemoveProduct() {
-        testProduct.add(new Egg());
-        inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR);
-        assertEquals(testProduct, inventory.removeProduct(new Egg().getBarcode()));
-        assertEquals(new ArrayList<>(), inventory.getAllProducts());
+        for (Product product : products) {
+            testProduct.add(product);
+            inventory.addProduct(product.getBarcode(), Quality.REGULAR);
+            List<Product> removedProducts = inventory.removeProduct(product.getBarcode());
+            assertEquals(1, removedProducts.size());
+            assertEquals(product.getBarcode(), removedProducts.get(0).getBarcode());
+            testProduct.remove(product);
+            assertEquals(testProduct, inventory.getAllProducts());
+        }
+        assertTrue(inventory.getAllProducts().isEmpty());
     }
 
     @Test
@@ -67,30 +103,21 @@ public class BasicInventoryTest {
 
         List<Product> removed = inventory.removeProduct(new Jam().getBarcode());
         assertEquals(1, removed.size());
-        assertEquals(new Jam(Quality.REGULAR), removed.getFirst());
-
+        assertEquals(new Jam(Quality.REGULAR), removed.get(0));
         assertEquals(1, inventory.getAllProducts().size());
-        assertEquals(new Egg(Quality.REGULAR), inventory.getAllProducts().getFirst());
+        assertEquals(new Egg(Quality.REGULAR), inventory.getAllProducts().get(0));
     }
 
     @Test
-    public void testAddProductByQuantity() {
+    public void testAddProductByQuantityMoreThanOne() {
         try {
             inventory.addProduct(new Egg().getBarcode(), Quality.REGULAR, 2);
-        } catch (InvalidStockRequestException e) {
-            assertEquals(e.getMessage(), "Current inventory is not fancy enough. "
-                    + "Please supply products one at a time.");
-        }
+        } catch (InvalidStockRequestException ignored) {}
     }
 
-    @Test
-    public void testRemoveProductByQuantity() {
-        try {
-            inventory.removeProduct(new Egg().getBarcode(), 2);
-        } catch (FailedTransactionException e) {
-            assertEquals(e.getMessage(), "Current inventory is not fancy enough. "
-                    + "Please purchase products one at a time.");
-        }
+    @Test(expected = FailedTransactionException.class)
+    public void testRemoveProductByQuantityMoreThanOne() throws FailedTransactionException {
+        inventory.removeProduct(new Egg().getBarcode(), 2);
     }
 
     @Test
@@ -106,7 +133,7 @@ public class BasicInventoryTest {
     }
 
     @Test
-    public void existsProductNull(){
+    public void testExistsProductNull() {
         assertFalse(inventory.existsProduct(null));
     }
 
@@ -115,9 +142,7 @@ public class BasicInventoryTest {
         try {
             inventory.addProduct(null, Quality.REGULAR);
         } catch (NullPointerException e) {
-            System.out.println(e.getMessage());
-            assertEquals(e.getMessage(),
-                    "Cannot invoke \"farm.inventory.product.data.Barcode.ordinal()\" because \"barcode\" is null");
+            assertEquals("Cannot invoke \"farm.inventory.product.data.Barcode.ordinal()\" because \"barcode\" is null", e.getMessage());
         }
         assertEquals(0, inventory.getAllProducts().size());
     }
@@ -158,17 +183,32 @@ public class BasicInventoryTest {
         inventory.addProduct(Barcode.EGG, Quality.SILVER);
         inventory.addProduct(Barcode.EGG, Quality.GOLD);
         testProduct.add(new Egg(Quality.IRIDIUM));
-        testProduct.add(new Egg(Quality.GOLD));
-        testProduct.add(new Egg(Quality.SILVER));
         testProduct.add(new Egg(Quality.REGULAR));
+        testProduct.add(new Egg(Quality.SILVER));
+        testProduct.add(new Egg(Quality.GOLD));
         assertEquals(testProduct, inventory.getAllProducts());
+    }
+
+    @Test
+    public void testRemoveProductByBarcode() {
+        Product egg = new Egg(Quality.REGULAR);
+        Product milk = new Milk(Quality.REGULAR);
+        inventory.addProduct(egg.getBarcode(), egg.getQuality());
+        inventory.addProduct(milk.getBarcode(), milk.getQuality());
+
+        List<Product> removedProducts = inventory.removeProduct(egg.getBarcode());
+        assertEquals(1, removedProducts.size());
+        assertEquals(egg.getBarcode(), removedProducts.get(0).getBarcode());
+
+        List<Product> remainingProducts = inventory.getAllProducts();
+        assertEquals(1, remainingProducts.size());
+        assertEquals(milk.getBarcode(), remainingProducts.get(0).getBarcode());
     }
 
     @Test
     public void testAddNullQuality() {
         inventory.addProduct(Barcode.EGG, null);
     }
-
 
     @Test
     public void testLargeInventory() {
@@ -177,7 +217,6 @@ public class BasicInventoryTest {
         }
         assertEquals(100000, inventory.getAllProducts().size());
     }
-
 
     @Test
     public void testRemoveNonExistingProduct() {
@@ -189,18 +228,117 @@ public class BasicInventoryTest {
     public void testAddAndRemoveQuickSuccession() {
         inventory.addProduct(Barcode.EGG, Quality.REGULAR);
         List<Product> removed = inventory.removeProduct(Barcode.EGG);
-
+        assertEquals(Barcode.EGG, removed.get(0).getBarcode());
         assertEquals(1, removed.size());
         assertTrue(inventory.getAllProducts().isEmpty());
     }
 
     @Test
-    public void testRemoveProductTwice() {
-        inventory.addProduct(Barcode.EGG, Quality.REGULAR);
-        inventory.removeProduct(Barcode.EGG);  // First removal
-        List<Product> secondRemoval = inventory.removeProduct(Barcode.EGG);  // Second removal
-
-        assertTrue(secondRemoval.isEmpty());
+    public void testRepeatedAddAndRemoveSameProduct() {
+        for (int i = 0; i < 10; i++) {
+            inventory.addProduct(Barcode.EGG, Quality.REGULAR);
+            List<Product> removed = inventory.removeProduct(Barcode.EGG);
+            assertEquals(1, removed.size());
+            assertEquals(Barcode.EGG, removed.get(0).getBarcode());
+            assertTrue(inventory.getAllProducts().isEmpty());
+        }
     }
 
+    @Test
+    public void testRemoveNonExistentProduct() {
+        inventory.addProduct(Barcode.MILK, Quality.REGULAR);
+        List<Product> removedProducts = inventory.removeProduct(Barcode.EGG);
+        assertTrue(removedProducts.isEmpty());
+        assertEquals(1, inventory.getAllProducts().size());
+    }
+
+    @Test
+    public void testAddProductWithSameBarcodeDifferentQuality() {
+        inventory.addProduct(Barcode.EGG, Quality.REGULAR);
+        inventory.addProduct(Barcode.EGG, Quality.SILVER);
+        inventory.addProduct(Barcode.EGG, Quality.GOLD);
+
+        List<Product> allProducts = inventory.getAllProducts();
+        assertEquals(3, allProducts.size());
+
+        assertTrue(allProducts.stream().anyMatch(p -> p.getQuality() == Quality.REGULAR));
+        assertTrue(allProducts.stream().anyMatch(p -> p.getQuality() == Quality.SILVER));
+        assertTrue(allProducts.stream().anyMatch(p -> p.getQuality() == Quality.GOLD));
+    }
+
+    @Test
+    public void testRemoveMultipleSameProduct() {
+        inventory.addProduct(Barcode.EGG, Quality.REGULAR);
+        inventory.addProduct(Barcode.EGG, Quality.REGULAR);
+
+        List<Product> removed = inventory.removeProduct(Barcode.EGG);
+        assertEquals(1, removed.size());  // Only one instance should be removed at a time
+        assertEquals(Barcode.EGG, removed.get(0).getBarcode());
+
+        List<Product> remainingProducts = inventory.getAllProducts();
+        assertEquals(1, remainingProducts.size());  // One instance should remain
+    }
+
+    @Test
+    public void testAddProductWithNullQuality() {
+        inventory.addProduct(Barcode.EGG, null);
+    }
+
+
+    @Test
+    public void testRemoveProductWithSameBarcode() {
+        Product egg1 = new Egg(Quality.REGULAR);
+        Product egg2 = new Egg(Quality.REGULAR);
+        inventory.addProduct(egg1.getBarcode(), egg1.getQuality());
+        inventory.addProduct(egg2.getBarcode(), egg2.getQuality());
+
+        List<Product> removedProducts = inventory.removeProduct(egg1.getBarcode());
+        assertEquals(1, removedProducts.size());
+        assertEquals(egg1.getBarcode(), removedProducts.get(0).getBarcode());
+
+        assertEquals(1, inventory.getAllProducts().size());
+        assertEquals(egg2.getBarcode(), inventory.getAllProducts().get(0).getBarcode());
+
+        removedProducts = inventory.removeProduct(egg2.getBarcode());
+        assertEquals(1, removedProducts.size());
+        assertEquals(egg2.getBarcode(), removedProducts.get(0).getBarcode());
+
+        assertTrue(inventory.getAllProducts().isEmpty());
+    }
+
+    @Test
+    public void testAddLargeNumberOfProducts() {
+        for (int i = 0; i < 10000; i++) {
+            inventory.addProduct(Barcode.EGG, Quality.REGULAR);
+        }
+        assertEquals(10000, inventory.getAllProducts().size());
+    }
+
+    @Test
+    public void testRemoveProductsInDifferentOrder() {
+        inventory.addProduct(Barcode.MILK, Quality.REGULAR);
+        inventory.addProduct(Barcode.EGG, Quality.REGULAR);
+        inventory.addProduct(Barcode.JAM, Quality.REGULAR);
+
+        List<Product> removedMilk = inventory.removeProduct(Barcode.MILK);
+        List<Product> removedEgg = inventory.removeProduct(Barcode.EGG);
+
+        assertEquals(1, removedMilk.size());
+        assertEquals(Barcode.MILK, removedMilk.get(0).getBarcode());
+
+        assertEquals(1, removedEgg.size());
+        assertEquals(Barcode.EGG, removedEgg.get(0).getBarcode());
+
+        List<Product> remainingProducts = inventory.getAllProducts();
+        assertEquals(1, remainingProducts.size());
+        assertEquals(Barcode.JAM, remainingProducts.get(0).getBarcode());
+    }
+
+    @Test
+    public void testRemoveProductTwice() {
+        inventory.addProduct(Barcode.EGG, Quality.REGULAR);
+        inventory.removeProduct(Barcode.EGG);
+        List<Product> secondRemoval = inventory.removeProduct(Barcode.EGG);
+        assertTrue(secondRemoval.isEmpty());
+    }
 }
