@@ -282,6 +282,7 @@ public class FarmGridTest {
                 expectedStats(itemsPlacedPlant), plantGrid.getStats());
     }
 
+
     @Test
     public void placeMultipleItemsAnimalGridTest() {
         animalGrid.place(0, 0, chicken);
