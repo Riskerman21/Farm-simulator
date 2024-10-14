@@ -1,8 +1,7 @@
 package farm.core.farmgrid;
 
 import farm.core.UnableToInteractException;
-import farm.inventory.product.*;
-import farm.inventory.product.data.Quality;
+import farm.inventory.product.Product;
 import farm.inventory.product.data.RandomQuality;
 
 import java.util.*;
@@ -12,23 +11,20 @@ import java.util.*;
  * Implements the Grid interface to provide farming functionality.
  */
 public class FarmGrid implements Grid {
-    private final List<String> types;
-    private final List<String> symbols;
-    private final List<Map<String, String>> attributes;
     private final int rows;
     private final int columns;
-    private final String farmType;
+    private final Object[][] grid;  // This stores both Plant and Animal objects
     private final RandomQuality randomQuality;
+    private final String farmType;
 
-    private static final Map<Character, String> SYMBOL_TO_ITEM = Map.of(
-            '.', "berry", ':', "coffee", 'ἴ', "wheat",
-            '৬', "chicken", '४', "cow", 'ඔ', "sheep"
-    );
-
-    private static final Map<String, List<String>> GROWTH_STAGES = Map.of(
-            "berry", List.of(".", "o", "@"),
-            "coffee", List.of(":", ";", "*", "%"),
-            "wheat", List.of("ἴ", "#")
+    // Map symbols to Plant/Animal classes
+    private static final Map<Character, Class<?>> SYMBOL_TO_ITEM = Map.of(
+            '.', Berry.class,
+            ':', CoffeePlant.class,
+            'ἴ', Wheat.class,
+            '৬', Chicken.class,
+            '४', Cow.class,
+            'ඔ', Sheep.class
     );
 
     /**
@@ -41,70 +37,44 @@ public class FarmGrid implements Grid {
         this.rows = rows;
         this.columns = columns;
         this.farmType = farmType;
-        int size = rows * columns;
-        this.types = new ArrayList<>(size);
-        this.symbols = new ArrayList<>(size);
-        this.attributes = new ArrayList<>(size);
+        this.grid = new Object[rows][columns];
         this.randomQuality = new RandomQuality();
-
-        //setup an empty map
-        for (int i = 0; i < size; i++) {
-            this.types.add("ground");
-            this.symbols.add(" ");
-            this.attributes.add(new HashMap<>());
-        }
-    }
-
-    /**
-     * Constructs a plant-type FarmGrid with specified dimensions.
-     *
-     * @param rows    the number of rows in the grid
-     * @param columns the number of columns in the grid
-     */
-    public FarmGrid(int rows, int columns) {
-        this(rows, columns, "plant");
     }
 
     @Override
     public boolean place(int row, int column, char symbol) throws IllegalStateException {
         if (!isValidPosition(row, column)) {
-            return false; //invalid position
+            return false;
         }
-        String itemName = SYMBOL_TO_ITEM.get(symbol);
-        if (itemName == null) {
-            return false; //invalid item
-        }
-        int index = getIndex(row, column);
-        if (!symbols.get(index).equals(" ")) {
+
+        if (grid[row][column] != null) {
             throw new IllegalStateException("Something is already there!");
         }
-        placeItem(index, symbol, itemName);
+
+        Object newItem = createItemFromSymbol(symbol);
+        if (newItem == null) {
+            return false;
+        }
+
+        grid[row][column] = newItem;
         return true;
     }
 
     /**
-     * Places a new item on the grid at the specified index.
-     *
-     * @param index The index in the grid where the item should be placed.
-     * @param symbol The symbol representing the item on the grid.
-     * @param itemName The name of the item to be placed.
-     * @throws IllegalArgumentException If the item type does not match the farm type.
+     * creates an instance of a valid animal/plant on the grid
+     * @param symbol The symbol of a valid animal/plant
+     * @return the created object
      */
-    private void placeItem(int index, char symbol, String itemName) {
-        boolean isAnimal = itemName.equals("chicken")
-                || itemName.equals("cow") || itemName.equals("sheep");
-        if ((farmType.equals("animal") && !isAnimal) || (farmType.equals("plant") && isAnimal)) {
-            throw new IllegalArgumentException("Invalid item for this farm type!");
+    private Object createItemFromSymbol(char symbol) {
+        Class<?> itemClass = SYMBOL_TO_ITEM.get(symbol);
+        if (itemClass == null) {
+            return null;
         }
-        types.set(index, itemName);
-        symbols.set(index, String.valueOf(symbol));
-        Map<String, String> properties = attributes.get(index);
-        properties.clear(); //remove ground attribute
-        if (isAnimal) {
-            properties.put("Fed", "Fed: false");
-            properties.put("Collected", "Collected: false");
-        } else {
-            properties.put("Stage", "Stage: 1");
+
+        try {
+            return itemClass.getDeclaredConstructor().newInstance();
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to create item from symbol.", e);
         }
     }
 
@@ -113,71 +83,71 @@ public class FarmGrid implements Grid {
         if (!isValidPosition(row, column)) {
             throw new UnableToInteractException("You can't harvest this location");
         }
-        int index = getIndex(row, column);
-        String type = types.get(index);
-        if (type.equals("ground")) {
-            throw new UnableToInteractException("Can't harvest an empty spot!");
+
+        Object item = grid[row][column];
+        if (item instanceof Plant plant) {
+            if (plant.isHarvestable()) {
+                Product product = plant.harvest(randomQuality.getRandomQuality());
+                plant.reset();
+                return product;
+            } else {
+                throw new UnableToInteractException("The crop is not fully grown!");
+            }
+        } else if (item instanceof Animal animal) {
+            if (animal.isFed()) {
+                Product product = animal.harvest(randomQuality.getRandomQuality());
+                return product;
+            } else {
+                throw new UnableToInteractException("Animal is not fed.");
+            }
+        } else {
+            throw new UnableToInteractException("Nothing to harvest here!");
         }
-        return farmType.equals("animal") ? harvestAnimal(index) : harvestPlant(index);
     }
 
-    /**
-     * Harvests an animal product.
-     *
-     * @param index the index of the animal in the grid
-     * @return the harvested Product
-     * @throws UnableToInteractException if the animal cannot be harvested
-     */
-    private Product harvestAnimal(int index) throws UnableToInteractException {
-        //grabbing animal attributes
-        Map<String, String> animalAttributes = attributes.get(index);
-        if (!animalAttributes.get("Fed").equals("Fed: true")) {
-            throw new UnableToInteractException("Animal not fed today!");
+    @Override
+    public List<List<String>> getStats() {
+        List<List<String>> stats = new ArrayList<>(rows * columns);
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                Object item = grid[i][j];
+                stats.add(getItemStats(item));
+            }
         }
-        if (animalAttributes.get("Collected").equals("Collected: true")) {
-            throw new UnableToInteractException("Already collected today!");
-        }
-        animalAttributes.put("Collected", "Collected: true");
-        Quality quality = randomQuality.getRandomQuality();
-        return switch (types.get(index)) {
-            case "cow" -> new Milk(quality);
-            case "chicken" -> new Egg(quality);
-            case "sheep" -> new Wool(quality);
-            default -> throw new UnableToInteractException("Unknown animal type");
-        };
+
+        return stats;
     }
 
-    /**
-     * Harvests a plant product.
-     *
-     * @param index the index of the plant in the grid
-     * @return the harvested Product
-     * @throws UnableToInteractException if the plant cannot be harvested
-     */
-    private Product harvestPlant(int index) throws UnableToInteractException {
-        //grabbing plant attributes
-        String type = this.types.get(index);
-        List<String> stages = GROWTH_STAGES.get(type);
-        //only harvestable at final stage
-        if (!this.symbols.get(index).equals(stages.getLast())) {
-            throw new UnableToInteractException("The crop is not fully grown!");
+    private List<String> getItemStats(Object item) {
+        if (item instanceof Plant plant) {
+            return List.of(
+                    plant.getType(),
+                    plant.getSymbol(),
+                    "Stage: " + plant.getStage()
+            );
+        } else if (item instanceof Animal animal) {
+            return List.of(
+                    animal.getType(),
+                    animal.getSymbol(),
+                    "Fed: " + animal.isFed(),
+                    "Collected: " + animal.isCollected()
+            );
+        } else {
+            return List.of("ground", " ");
         }
-        Quality quality = this.randomQuality.getRandomQuality();
-        //harvesting resets plant
-        this.symbols.set(index, stages.getFirst());
-        this.attributes.get(index).put("Stage", "Stage: 0");
-        return switch (type) {
-            case "wheat" -> new Bread(quality);
-            case "coffee" -> new Coffee(quality);
-            case "berry" -> new Jam(quality);
-            default -> throw new UnableToInteractException("Unknown plant type");
-        };
     }
 
     @Override
     public boolean interact(String command, int row, int column) throws UnableToInteractException {
+        if (!isValidPosition(row, column)) {
+            throw new UnableToInteractException("Invalid position.");
+        }
+
+        Object item = grid[row][column];
+
         return switch (command) {
-            case "feed" -> feed(row, column);
+            case "feed" -> feedAnimal(row, column);
             case "end-day" -> {
                 endDay();
                 yield true;
@@ -190,157 +160,67 @@ public class FarmGrid implements Grid {
         };
     }
 
-    /**
-     * Feeds the animal at the specified position.
-     *
-     * @param row    the row coordinate
-     * @param column the column coordinate
-     * @return true if the animal was successfully fed, false otherwise
-     */
-    private boolean feed(int row, int column) {
-        if (!isValidPosition(row, column)) {
-            return false;
-        }
-        int index = getIndex(row, column);
-        String type = types.get(index);
-        //can only feed animal
-        if (type.equals("cow") || type.equals("chicken") || type.equals("sheep")) {
-            attributes.get(index).put("Fed", "Fed: true");
+    private boolean feedAnimal(int row, int column) throws UnableToInteractException {
+        Object item = grid[row][column];
+        if (item instanceof Animal animal) {
+            animal.feed();
             return true;
         }
         return false;
     }
 
-    /**
-     * Removes the item at the specified position.
-     *
-     * @param row    the row coordinate
-     * @param column the column coordinate
-     */
+    private void endDay() {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                Object item = grid[i][j];
+                if (item instanceof Plant) {
+                    ((Plant) item).grow();
+                } else if (item instanceof Animal) {
+                    ((Animal) item).reset();
+                }
+            }
+        }
+    }
+
     private void remove(int row, int column) {
         if (isValidPosition(row, column)) {
-            int index = getIndex(row, column);
-            //add back the ground attributes
-            types.set(index, "ground");
-            symbols.set(index, " ");
-            attributes.get(index).clear();
-        }
-    }
-
-    /**
-     * Advances the farm to the next day, updating all items on the grid.
-     */
-    public void endDay() {
-        //loop through all things in a farm
-        for (int i = 0; i < types.size(); i++) {
-            if (farmType.equals("plant")) {
-                growPlant(i);
-            } else if (farmType.equals("animal")) {
-                resetAnimal(i);
-            }
-        }
-    }
-
-    /**
-     * Grows a plant to its next stage.
-     *
-     * @param index the index of the plant in the grid
-     */
-    private void growPlant(int index) {
-        String type = types.get(index);
-        List<String> stages = GROWTH_STAGES.get(type);
-        //no stages if ground
-        if (stages != null) {
-            int currentStage = stages.indexOf(symbols.get(index));
-            //increase stage if possible (ie. not out of stages)
-            if (currentStage < stages.size() - 1) {
-                symbols.set(index, stages.get(currentStage + 1));
-                String stage = String.valueOf(currentStage + 2);
-                attributes.get(index).put("Stage", "Stage: " + stage);
-            }
-        }
-    }
-
-    /**
-     * Resets an animal's fed and collected status for the new day.
-     *
-     * @param index the index of the animal in the grid
-     */
-    private void resetAnimal(int index) {
-        String type = types.get(index);
-        if (type.equals("cow") || type.equals("chicken") || type.equals("sheep")) {
-            Map<String, String> animalAttributes = attributes.get(index);
-            animalAttributes.put("Fed", "Fed: false");
-            animalAttributes.put("Collected", "Collected: false");
+            grid[row][column] = null;
         }
     }
 
     @Override
     public String farmDisplay() {
-        //top border
         StringBuilder display = new StringBuilder("-".repeat((columns * 2) + 3)).append('\n');
         for (int i = 0; i < rows; i++) {
-            //border
             display.append("| ");
-            //blank spaces the size of the farm
             for (int j = 0; j < columns; j++) {
-                display.append(symbols.get(getIndex(i, j))).append(' ');
+                Object item = grid[i][j];
+                if (item instanceof Plant) {
+                    display.append(((Plant) item).getSymbol()).append(' ');
+                } else if (item instanceof Animal) {
+                    display.append(((Animal) item).getSymbol()).append(' ');
+                } else {
+                    display.append("  ");
+                }
             }
-            //new line at the end of every row
             display.append("|\n");
         }
-        //return with bottom border
         return display.append("-".repeat((columns * 2) + 3)).append('\n').toString();
     }
 
-    @Override
-    public List<List<String>> getStats() {
-        List<List<String>> stats = new ArrayList<>(types.size());
-        //return the type and attribute of every element in the farm
-        for (int i = 0; i < types.size(); i++) {
-            List<String> itemStats = new ArrayList<>(2 + attributes.get(i).size());
-            itemStats.add(types.get(i));
-            itemStats.add(symbols.get(i));
-            itemStats.addAll(attributes.get(i).values());
-            stats.add(itemStats);
-        }
-        return stats;
-    }
+
 
     @Override
     public int getRows() {
-        return this.rows;
+        return rows;
     }
 
     @Override
     public int getColumns() {
-        return this.columns;
+        return columns;
     }
 
-    /**
-     * Checks if the given position is valid within the grid.
-     *
-     * @param row    the row coordinate
-     * @param column the column coordinate
-     * @return true if the position is valid, false otherwise
-     */
     private boolean isValidPosition(int row, int column) {
         return row >= 0 && row < this.rows && column >= 0 && column < this.columns;
-    }
-
-    /**
-     * Converts 2D coordinates to a 1D index in the grid lists.
-     *
-     * @param row    the row coordinate
-     * @param column the column coordinate
-     * @return the corresponding index in the grid lists
-     */
-    private int getIndex(int row, int column) {
-        return row * this.columns + column;
-    }
-
-    @Override
-    public String toString() {
-        return farmType;
     }
 }
