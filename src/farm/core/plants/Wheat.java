@@ -1,7 +1,6 @@
-package farm.core.farmgrid;
+package farm.core.plants;
 
 import farm.inventory.product.Bread;
-import farm.inventory.product.Jam;
 import farm.inventory.product.Product;
 import farm.inventory.product.data.Quality;
 

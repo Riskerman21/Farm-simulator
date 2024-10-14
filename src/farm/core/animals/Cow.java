@@ -1,27 +1,26 @@
-package farm.core.farmgrid;
+package farm.core.animals;
 
 import farm.inventory.product.Milk;
 import farm.inventory.product.Product;
-import farm.inventory.product.Wool;
 import farm.inventory.product.data.Quality;
 
 /**
- * Class representing a sheep animal in farm grid
+ * Class representing a cow animal in farm grid
  */
-public class Sheep extends AbstractAnimal {
+public class Cow extends AbstractAnimal {
 
     @Override
     protected Product createProduct(Quality quality) {
-        return new Wool(quality);
+        return new Milk(quality);
     }
 
     @Override
     public String getSymbol() {
-        return "ඔ";
+        return "४";
     }
 
     @Override
     public String getType() {
-        return "sheep";
+        return "cow";
     }
 }

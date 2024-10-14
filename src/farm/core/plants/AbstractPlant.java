@@ -1,4 +1,4 @@
-package farm.core.farmgrid;
+package farm.core.plants;
 
 import farm.core.UnableToInteractException;
 import farm.inventory.product.Product;
@@ -49,9 +49,10 @@ public abstract class AbstractPlant implements Plant {
     @Override
     public Product harvest(Quality quality) throws UnableToInteractException {
         if (!isHarvestable()) {
-            throw new UnableToInteractException("The plant is not ready for harvest.");
+            throw new UnableToInteractException("The crop is not fully grown!");
         }
         harvested = true;
+        reset();
         return createProduct(quality);
     }
 
@@ -60,11 +61,18 @@ public abstract class AbstractPlant implements Plant {
         this.currentStage = 0;
     }
 
-    /**
-     * get the symbol representing the plant on the grid
-     */
+    @Override
     public String getSymbol() {
         return growthStages.get(currentStage);
+    }
+
+    @Override
+    public List<String> getsStats() {
+        return List.of(
+                this.getType(),
+                this.getSymbol(),
+                "Stage: " + this.getStage()
+        );
     }
 
     protected abstract Product createProduct(Quality quality);

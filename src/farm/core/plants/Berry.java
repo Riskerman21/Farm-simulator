@@ -1,4 +1,4 @@
-package farm.core.farmgrid;
+package farm.core.plants;
 
 import farm.inventory.product.Jam;
 import farm.inventory.product.Product;

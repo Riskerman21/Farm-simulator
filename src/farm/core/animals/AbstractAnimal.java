@@ -1,8 +1,10 @@
-package farm.core.farmgrid;
+package farm.core.animals;
 
 import farm.core.UnableToInteractException;
 import farm.inventory.product.Product;
 import farm.inventory.product.data.Quality;
+
+import java.util.List;
 
 /**
  * Class representing an abstract animal in farm grid
@@ -30,7 +32,7 @@ public abstract class AbstractAnimal implements Animal {
     @Override
     public Product harvest(Quality quality) throws UnableToInteractException {
         if (!isFed()) {
-            throw new UnableToInteractException("The animal has not been fed today.");
+            throw new UnableToInteractException("Animal is not fed.");
         }
         if (collected) {
             throw new UnableToInteractException("The product has already been collected today.");
@@ -39,7 +41,15 @@ public abstract class AbstractAnimal implements Animal {
         return createProduct(quality);
     }
 
-
+    @Override
+    public List<String> getsStats() {
+        return List.of(
+                this.getType(),
+                this.getSymbol(),
+                "Fed: " + this.isFed(),
+                "Collected: " + this.isCollected()
+        );
+    }
 
     @Override
     public void reset() {

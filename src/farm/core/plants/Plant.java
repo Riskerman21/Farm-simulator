@@ -1,8 +1,10 @@
-package farm.core.farmgrid;
+package farm.core.plants;
 
 import farm.core.UnableToInteractException;
 import farm.inventory.product.Product;
 import farm.inventory.product.data.Quality;
+
+import java.util.List;
 
 /**
  * A Interface describing the required methods for an Plant.
@@ -43,4 +45,9 @@ public interface Plant {
      * gets the stages of growth of a given plant
      */
     int getStage();
+
+    /**
+     * returns stats of a plant
+     */
+    List<String> getsStats();
 }

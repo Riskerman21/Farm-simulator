@@ -1,8 +1,10 @@
-package farm.core.farmgrid;
+package farm.core.animals;
 
 import farm.core.UnableToInteractException;
 import farm.inventory.product.Product;
 import farm.inventory.product.data.Quality;
+
+import java.util.List;
 
 /**
  * A Interface describing the required methods for an Animal.
@@ -44,4 +46,8 @@ public interface Animal {
      */
     String getType();
 
+    /**
+     * returns stats of a animal
+     */
+    List<String> getsStats();
 }

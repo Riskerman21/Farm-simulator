@@ -1,4 +1,4 @@
-package farm.core.farmgrid;
+package farm.core.animals;
 
 import farm.inventory.product.Egg;
 import farm.inventory.product.Product;
